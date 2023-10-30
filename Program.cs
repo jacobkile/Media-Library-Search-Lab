@@ -1,4 +1,5 @@
-﻿using NLog;
+﻿using Microsoft.AspNetCore.Builder;
+using NLog;
 
 static void DisplayMovieDetails(int movieId, string title, string director, TimeSpan runtime, string genres)
 {
@@ -9,7 +10,31 @@ static void DisplayMovieDetails(int movieId, string title, string director, Time
     Console.WriteLine($"Genres: {genres}");
     Console.WriteLine();
 }
-
+static void SearchMoviesByTitle(string titleToSearch)
+    {
+        int matchCount = 0;
+        Console.WriteLine("Search Results:");
+    using StreamReader sr = new StreamReader("movies.scrubbed.csv");
+    string line;
+    while ((line = sr.ReadLine()) != null)
+    {
+        string[] fields = line.Split(',');
+        if (fields.Length == 5)
+        {
+            if (int.TryParse(fields[0], out int movieId))
+            {
+                string title = fields[1];
+                string genres = fields[2];
+                string director = fields[3];
+                if (TimeSpan.TryParse(fields[4], out TimeSpan runtime) && title.ToLower().Contains(titleToSearch.ToLower()))
+                {
+                    matchCount++;
+                    DisplayMovieDetails(movieId, title, director, runtime, genres);
+                }
+            }
+        }
+    }
+}
 string path = Directory.GetCurrentDirectory() + "\\nlog.config";
 
 var logger = LogManager.LoadConfiguration(path).GetCurrentClassLogger();
@@ -18,9 +43,10 @@ string scrubbedFile = FileScrubber.ScrubMovies("movies.csv");
 logger.Info(scrubbedFile);
 MovieFile movieFile = new MovieFile(scrubbedFile);
 
-Console.WriteLine("Enter 1 to see all movies on file.");
-Console.WriteLine("Enter 2 to add movies to the file.");
-Console.WriteLine("Enter anything else to quit.");
+Console.WriteLine("1) View All Movies.");
+Console.WriteLine("2) Add Movie.");
+Console.WriteLine("3) Find Movie.");
+Console.WriteLine("Enter quit.");
 
 string? resp = Console.ReadLine();
 
@@ -92,8 +118,10 @@ else if (resp == "2")
 }
 else if (resp == "3")
 {
-    
-}
+     Console.Write("Enter the title to search for: ");
+    string titleToSearch = Console.ReadLine();
+    SearchMoviesByTitle(titleToSearch);
+    }
 
 logger.Info("Program ended");
 
