@@ -1,81 +1,34 @@
-﻿using Microsoft.AspNetCore.Builder;
+﻿using Microsoft.AspNetCore.Mvc;
 using NLog;
 
-static void DisplayMovieDetails(int movieId, string title, string director, TimeSpan runtime, string genres)
-{
-    Console.WriteLine($"Id: {movieId}");
-    Console.WriteLine($"Title: {title}");
-    Console.WriteLine($"Director: {director}");
-    Console.WriteLine($"Run time: {runtime:hh\\:mm\\:ss}");
-    Console.WriteLine($"Genres: {genres}");
-    Console.WriteLine();
-}
-static void SearchMoviesByTitle(string titleToSearch)
-    {
-        int matchCount = 0;
-        Console.WriteLine("Search Results:");
-    using StreamReader sr = new StreamReader("movies.scrubbed.csv");
-    string line;
-    while ((line = sr.ReadLine()) != null)
-    {
-        string[] fields = line.Split(',');
-        if (fields.Length == 5)
-        {
-            if (int.TryParse(fields[0], out int movieId))
-            {
-                string title = fields[1];
-                string genres = fields[2];
-                string director = fields[3];
-                if (TimeSpan.TryParse(fields[4], out TimeSpan runtime) && title.ToLower().Contains(titleToSearch.ToLower()))
-                {
-                    matchCount++;
-                    DisplayMovieDetails(movieId, title, director, runtime, genres);
-                }
-            }
-        }
-    }
-}
+
 string path = Directory.GetCurrentDirectory() + "\\nlog.config";
 
 var logger = LogManager.LoadConfiguration(path).GetCurrentClassLogger();
 logger.Info("Program started");
+
 string scrubbedFile = FileScrubber.ScrubMovies("movies.csv");
 logger.Info(scrubbedFile);
 MovieFile movieFile = new MovieFile(scrubbedFile);
 
-Console.WriteLine("1) View All Movies.");
-Console.WriteLine("2) Add Movie.");
-Console.WriteLine("3) Find Movie.");
-Console.WriteLine("Enter quit.");
+List<Movie> movies = movieFile.Movies;
 
-string? resp = Console.ReadLine();
+while (true)
+    {
+        Console.WriteLine("1) View All Movies.");
+        Console.WriteLine("2) Add Movie.");
+        Console.WriteLine("3) Find Movie.");
+        Console.WriteLine("Enter to quit.");
 
-if (resp == "1")
-{
-    using (StreamReader sr = new StreamReader("movies.scrubbed.csv"))
-        {
-            string line;
-            while ((line = sr.ReadLine()) != null)
+        string? resp = Console.ReadLine();
+
+            if (resp == "1")
             {
-                string[] fields = line.Split(',');
-                if (fields.Length == 5)
+                foreach (var movie in movies)
                 {
-                    int movieId;
-                    if (int.TryParse(fields[0], out movieId))
-                    {
-                        string title = fields[1];
-                        string genres = fields[2];
-                        string director = fields[3];
-                        TimeSpan runtime;
-                        if (TimeSpan.TryParse(fields[4], out runtime))
-                        {
-                            DisplayMovieDetails(movieId, title, director, runtime, genres);
-                        }
-                    }
+                    DisplayMovieDetails(movie);
                 }
             }
-        }
-}
 else if (resp == "2")
 {
     int x = 0;
@@ -116,12 +69,43 @@ else if (resp == "2")
         logger.Info("Inserted the movie {title} at {now}",title, DateTime.Now);
     }
 }
-else if (resp == "3")
-{
-     Console.Write("Enter the title to search for: ");
-    string titleToSearch = Console.ReadLine();
-    SearchMoviesByTitle(titleToSearch);
+    else if (resp == "3")
+    {
+        // Search for movies by title using LINQ
+        Console.Write("Enter the title to search for: ");
+        string titleToSearch = Console.ReadLine();
+        SearchMoviesByTitle(movies, titleToSearch);
     }
+    else if (resp == "")
+    {
+        break;
+    }
+    else
+    {
+        Console.WriteLine("Invalid option. Please choose a valid option.");
+    }
+}
 
 logger.Info("Program ended");
 
+ static void SearchMoviesByTitle(List<Movie> movies, string titleToSearch)
+    {
+        var matchingMovies = movies.Where(movie => movie.title.Contains(titleToSearch, StringComparison.OrdinalIgnoreCase)).ToList();
+
+        Console.WriteLine("Search Results:");
+        foreach (var movie in matchingMovies)
+        {
+            DisplayMovieDetails(movie);
+        }
+        Console.WriteLine($"Total matches found: {matchingMovies.Count}");
+    }
+
+static void DisplayMovieDetails(Movie movie)
+    {
+        Console.WriteLine($"Id: {movie.mediaId}");
+        Console.WriteLine($"Title: {movie.title}");
+        Console.WriteLine($"Director: {movie.director}");
+        Console.WriteLine($"Run time: {movie.runningTime:hh\\:mm\\:ss}");
+        Console.WriteLine($"Genres: {movie.genres}");
+        Console.WriteLine();
+    }
