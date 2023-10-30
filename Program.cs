@@ -29,6 +29,7 @@ if (resp == "1")
                 Console.WriteLine();
             }
         }
+    
 }
 else if (resp == "2")
 {
@@ -53,16 +54,27 @@ else if (resp == "2")
     Console.Write("What is the movie Title?: ");
     string title = Console.ReadLine();
 
-    Console.Write("What genres is the movie? (comma-separated): ");
+    Console.Write("What genres is the movie?: ");
     string genres = Console.ReadLine();
     genres = genres.Replace(" ", "|");
 
-    using (StreamWriter sw = new StreamWriter("movies.csv", true))
+    Console.Write("Enter movie Director:");
+    string director = Console.ReadLine();
+
+    Console.Write("Enter running time (h:m:s):");
+    var runtime = Console.ReadLine();
+
+    using (StreamWriter sw = new StreamWriter("movies.scrubbed.csv", true))
     {
-        sw.WriteLine("{0},{1},{2}", x, title, genres);
+        sw.WriteLine("{0},{1},{2},{3},{4}", x, title, genres, director, runtime);
 
         logger.Info("Inserted the movie {title} at {now}",title, DateTime.Now);
     }
 }
+else if (resp == "3")
+{
+
+}
 
 logger.Info("Program ended");
+
