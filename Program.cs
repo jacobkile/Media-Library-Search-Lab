@@ -1,5 +1,15 @@
 ﻿using NLog;
 
+static void DisplayMovieDetails(int movieId, string title, string director, TimeSpan runtime, string genres)
+{
+    Console.WriteLine($"Id: {movieId}");
+    Console.WriteLine($"Title: {title}");
+    Console.WriteLine($"Director: {director}");
+    Console.WriteLine($"Run time: {runtime:hh\\:mm\\:ss}");
+    Console.WriteLine($"Genres: {genres}");
+    Console.WriteLine();
+}
+
 string path = Directory.GetCurrentDirectory() + "\\nlog.config";
 
 var logger = LogManager.LoadConfiguration(path).GetCurrentClassLogger();
@@ -22,14 +32,23 @@ if (resp == "1")
             while ((line = sr.ReadLine()) != null)
             {
                 string[] fields = line.Split(',');
-                foreach (string field in fields)
+                if (fields.Length == 5)
                 {
-                    Console.Write(field + "\n");
+                    int movieId;
+                    if (int.TryParse(fields[0], out movieId))
+                    {
+                        string title = fields[1];
+                        string genres = fields[2];
+                        string director = fields[3];
+                        TimeSpan runtime;
+                        if (TimeSpan.TryParse(fields[4], out runtime))
+                        {
+                            DisplayMovieDetails(movieId, title, director, runtime, genres);
+                        }
+                    }
                 }
-                Console.WriteLine();
             }
         }
-    
 }
 else if (resp == "2")
 {
@@ -73,7 +92,7 @@ else if (resp == "2")
 }
 else if (resp == "3")
 {
-
+    
 }
 
 logger.Info("Program ended");
